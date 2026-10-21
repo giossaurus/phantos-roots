@@ -1,5 +1,10 @@
 # PhantOS: zsh with oh-my-zsh and powerlevel10k, tuned to start fast under iSH's emulator.
 
+# A session's first prompt can come before the app has measured the screen, while the tty still
+# says 80 columns. zsh then pads a line left without a newline to 80 columns and marks it ("#" for
+# root), and on a 41-column iPhone that mark lands mid-screen. Unset, zsh uses its built-in mark.
+PROMPT_EOL_MARK=''
+
 # The PhantOS banner prints first: nothing may print once the instant prompt is up.
 [[ -r /etc/phantos/banner.zsh ]] && source /etc/phantos/banner.zsh
 

@@ -75,10 +75,22 @@ for cols in 40 80; do
     echo "$output" | grep -q '▄███▄  PhantOS' || fail "no PhantOS banner at $cols columns: $output"
     echo "$output" | grep -qE '██████╗|█▀█ █ █ ▄▀█' && fail "block letters came back at $cols columns: $output"
 done
-banner=$(in_root 'stty cols 40 rows 30; exec zsh -i' 'exit\n' | sed 's/\x1b\[[0-9;]*m//g' | grep -E '▄███▄|█▀█▀█|▀ ▀ ▀')
+# Like fastfetch, the banner tells where you are, read without starting a process.
+banner=$(in_root 'stty cols 40 rows 30; exec zsh -i' 'exit\n' | sed 's/\x1b\[[0-9;]*m//g' | grep -E '▄███▄|█▀█▀█|▀ ▀ ▀|apk add')
+echo "$banner" | grep -q 'root@' || fail "the banner doesn't say who you are: $banner"
+echo "$banner" | grep -q 'Alpine 3\.' || fail "the banner doesn't name the system: $banner"
+echo "$banner" | grep -q 'zsh 5\.' || fail "the banner doesn't name the shell: $banner"
+echo "$banner" | grep -qE 'up [0-9]+ (min|h|d)' || fail "the banner doesn't show uptime: $banner"
+echo "$banner" | grep -qE '[0-9]+ packages' || fail "the banner doesn't count packages: $banner"
 while IFS= read -r line; do
     [ "${#line}" -le 40 ] || fail "banner line wider than 40 columns: '$line'"
 done <<< "$banner"
+# The very first session starts before the app knows the screen's size, at 80 columns. zsh's mark
+# for a line without a newline ("#" for root) then lands mid-screen on an iPhone; it stays unset.
+# Unset, zsh falls back to its built-in mark, so it must be set, and empty.
+output=$(in_root 'zsh -i -c "print -r -- eol-mark=\${+PROMPT_EOL_MARK}:\${#PROMPT_EOL_MARK}"')
+echo "$output" | grep -q 'eol-mark=1:0' || fail "PROMPT_EOL_MARK isn't set to empty: $output"
+
 # Commands run through zsh -c are scripts, not sessions.
 output=$(in_root 'zsh -i -c true')
 echo "$output" | grep -q '██' && fail "a zsh -c command printed the banner: $output"
