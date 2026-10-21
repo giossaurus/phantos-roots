@@ -67,13 +67,18 @@ if echo "$output" | grep -qiE 'error|not found|warning|configuration wizard|inse
     fail "interactive zsh complained: $output"
 fi
 
-# Every new session opens with the compact PhantOS banner. The screen's width isn't known yet when
-# zsh starts (the tty still says 80 columns), so a banner sized to it broke apart on an iPhone.
+# Every new session opens with a small PhantOS banner, the size of a few lines of text: block
+# letters were unreadable on an iPhone. Every line fits 40 columns.
 for cols in 40 80; do
-    output=$(in_root "stty cols $cols rows 30; exec zsh -i" 'exit\n')
-    echo "$output" | grep -q '█▀█ █ █ ▄▀█' || fail "no compact banner at $cols columns: $output"
-    echo "$output" | grep -q '██████╗' && fail "the wide banner came back at $cols columns: $output"
+    # Compared as shown on screen, without the colour codes between the ghost and the name.
+    output=$(in_root "stty cols $cols rows 30; exec zsh -i" 'exit\n' | sed $'s/\x1b\\[[0-9;]*m//g')
+    echo "$output" | grep -q '▄███▄  PhantOS' || fail "no PhantOS banner at $cols columns: $output"
+    echo "$output" | grep -qE '██████╗|█▀█ █ █ ▄▀█' && fail "block letters came back at $cols columns: $output"
 done
+banner=$(in_root 'stty cols 40 rows 30; exec zsh -i' 'exit\n' | sed 's/\x1b\[[0-9;]*m//g' | grep -E '▄███▄|█▀█▀█|▀ ▀ ▀')
+while IFS= read -r line; do
+    [ "${#line}" -le 40 ] || fail "banner line wider than 40 columns: '$line'"
+done <<< "$banner"
 # Commands run through zsh -c are scripts, not sessions.
 output=$(in_root 'zsh -i -c true')
 echo "$output" | grep -q '██' && fail "a zsh -c command printed the banner: $output"
