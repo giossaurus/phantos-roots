@@ -91,6 +91,18 @@ done <<< "$banner"
 output=$(in_root 'zsh -i -c "print -r -- eol-mark=\${+PROMPT_EOL_MARK}:\${#PROMPT_EOL_MARK}"')
 echo "$output" | grep -q 'eol-mark=1:0' || fail "PROMPT_EOL_MARK isn't set to empty: $output"
 
+# A plain Neovim, no plugin manager: it has to open fast under the emulator.
+nvim_start=$(now_ms)
+output=$(in_root 'nvim --headless "+lua io.write(\"nvim-number=\" .. tostring(vim.o.number))" +qa')
+nvim_ms=$(( $(now_ms) - nvim_start - baseline ))
+echo "nvim opens and quits in ${nvim_ms} ms"
+echo "$output" | grep -q 'nvim-number=true' || fail "Neovim didn't load its config: $output"
+echo "$output" | grep -qiE 'error|E[0-9]+:' && fail "Neovim complained: $output"
+[ "$nvim_ms" -le "${MAX_NVIM_MS:-1500}" ] || fail "Neovim takes ${nvim_ms} ms to open, over ${MAX_NVIM_MS:-1500} ms"
+output=$(in_root 'zsh -i -c "echo editor=\$EDITOR; whence -p vim || alias vim"')
+echo "$output" | grep -q 'editor=nvim' || fail "EDITOR isn't nvim: $output"
+echo "$output" | grep -q "vim=nvim" || fail "vim doesn't open Neovim: $output"
+
 # Commands run through zsh -c are scripts, not sessions.
 output=$(in_root 'zsh -i -c true')
 echo "$output" | grep -q '██' && fail "a zsh -c command printed the banner: $output"

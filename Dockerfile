@@ -13,7 +13,7 @@ RUN : > /etc/motd
 # without gcloud, and the worker reopens pipes through /proc/self/fd, which iSH can't do.
 ARG OHMYZSH_REVISION=2100c630ba4bd67bb48802c3e7da893a4fdaa1a0
 ARG P10K_REVISION=d05a1b00f9a61f9578bf9dc19b8451942dde8734
-RUN apk add --no-cache zsh zsh-vcs git \
+RUN apk add --no-cache zsh zsh-vcs git neovim \
  && git clone -q https://github.com/ohmyzsh/ohmyzsh.git /root/.oh-my-zsh \
  && git -C /root/.oh-my-zsh checkout -q "$OHMYZSH_REVISION" \
  && rm -rf /root/.oh-my-zsh/.git \
@@ -24,7 +24,10 @@ RUN apk add --no-cache zsh zsh-vcs git \
  && sed -i '/^ *gcloud /d' /root/.p10k.zsh \
  && sed -i 's#^\(root:.*\):/bin/ash$#\1:/bin/zsh#' /etc/passwd
 COPY zshrc /root/.zshrc
+# A plain Neovim with a small config; see nvim/init.lua.
+COPY nvim/init.lua /root/.config/nvim/init.lua
 # The completion dump and powerlevel10k's compiled files are built now instead of at the first
 # start, and the scripts sourced at every start are compiled so zsh doesn't parse them each time.
 RUN zsh -i -c exit \
+ && nvim --headless +qa \
  && zsh -c 'for f in /etc/phantos/banner.zsh ~/.zshrc ~/.p10k.zsh ~/.oh-my-zsh/oh-my-zsh.sh ~/.oh-my-zsh/lib/*.zsh ~/.oh-my-zsh/plugins/git/git.plugin.zsh; do zcompile -R -- $f; done'

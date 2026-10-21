@@ -42,3 +42,7 @@ source "$ZSH/oh-my-zsh.sh"
 # gitstatusd reopens pipes through /proc/self/fd, which iSH can't do; p10k falls back to
 # vcs_info, which only costs time inside a repository.
 typeset -g POWERLEVEL9K_DISABLE_GITSTATUS=true
+
+# Neovim is the editor, and what vim opens.
+export EDITOR=nvim VISUAL=nvim
+alias vim=nvim
