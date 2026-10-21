@@ -67,6 +67,19 @@ if echo "$output" | grep -qiE 'error|not found|warning|configuration wizard|inse
     fail "interactive zsh complained: $output"
 fi
 
+# Every new session opens with the PhantOS banner, sized to the screen: the wide one needs 61
+# columns, an iPhone held upright has about 41.
+output=$(in_root 'stty cols 40 rows 30; exec zsh -i' 'exit\n')
+echo "$output" | grep -q '█▀█ █ █ ▄▀█' || fail "no compact banner at 40 columns: $output"
+echo "$output" | grep -q '██████╗ ██╗  ██╗' && fail "the wide banner overflows 40 columns: $output"
+output=$(in_root 'stty cols 80 rows 30; exec zsh -i' 'exit\n')
+echo "$output" | grep -q '██████╗ ██╗  ██╗' || fail "no wide banner at 80 columns: $output"
+# Commands run through zsh -c are scripts, not sessions.
+output=$(in_root 'zsh -i -c true')
+echo "$output" | grep -q '██' && fail "a zsh -c command printed the banner: $output"
+# The banner replaces Alpine's welcome, which login prints from /etc/motd.
+"$ish_build/ish" -f "$work/root" /bin/cat /etc/motd | grep -q 'Welcome to Alpine' && fail "Alpine's welcome is still in /etc/motd"
+
 # The prompt shows the branch inside a repository. Ghostty-style shells live in git checkouts.
 output=$(in_root 'mkdir -p /tmp/repo && cd /tmp/repo && git init -q -b phantos-branch && exec zsh -i' 'exit\n')
 echo "$output" | grep -q 'phantos-branch' || fail "the prompt doesn't show the git branch: $output"

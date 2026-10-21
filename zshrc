@@ -1,5 +1,8 @@
 # PhantOS: zsh with oh-my-zsh and powerlevel10k, tuned to start fast under iSH's emulator.
 
+# The PhantOS banner prints first: nothing may print once the instant prompt is up.
+[[ -r /etc/phantos/banner.zsh ]] && source /etc/phantos/banner.zsh
+
 # Instant prompt draws the last prompt at once while the rest of this file loads.
 # Keep it at the top; anything that prints or asks for input goes above it.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then

@@ -4,7 +4,9 @@ FROM ish-alpine
 LABEL ish.export=appstore-apk.tar.gz
 RUN mkdir /ish && touch /ish/version
 RUN echo 31900 > /ish/apk-version
-COPY apk-motd /etc/motd
+# The PhantOS banner, printed by zsh, replaces Alpine's welcome in /etc/motd.
+COPY banner.zsh /etc/phantos/banner.zsh
+RUN : > /etc/motd
 
 # zsh with oh-my-zsh and powerlevel10k is root's shell. Revisions are pinned so a root
 # rebuilds the same; bump them deliberately. p10k's gcloud segment starts its async worker even
@@ -25,4 +27,4 @@ COPY zshrc /root/.zshrc
 # The completion dump and powerlevel10k's compiled files are built now instead of at the first
 # start, and the scripts sourced at every start are compiled so zsh doesn't parse them each time.
 RUN zsh -i -c exit \
- && zsh -c 'for f in ~/.zshrc ~/.p10k.zsh ~/.oh-my-zsh/oh-my-zsh.sh ~/.oh-my-zsh/lib/*.zsh ~/.oh-my-zsh/plugins/git/git.plugin.zsh; do zcompile -R -- $f; done'
+ && zsh -c 'for f in /etc/phantos/banner.zsh ~/.zshrc ~/.p10k.zsh ~/.oh-my-zsh/oh-my-zsh.sh ~/.oh-my-zsh/lib/*.zsh ~/.oh-my-zsh/plugins/git/git.plugin.zsh; do zcompile -R -- $f; done'
