@@ -44,7 +44,9 @@ def flatten(image, output):
 
     for layer, info in entries.values():
         fileobj = layer.extractfile(info) if info.isfile() else None
-        info.mtime = 0 # make reproducible
+        # make reproducible, but keep compiled zsh files newer than their sources, or zsh and
+        # powerlevel10k throw them away and recompile at the first start
+        info.mtime = 1 if info.name.endswith('.zwc') else 0
         output.addfile(info, fileobj)
 
     for layer in layers:
